@@ -4,9 +4,45 @@ from typing import Any, Dict
 import jwt
 from decouple import config
 
+from src.auth.exceptions import JWTSecretUndefined, JWTSecretFileUndefined
 
-JWT_SECRET: str = config("JWT_SECRET")
-JWT_ALGORITHM = config("JWT_ALGORITHM", "HS256")
+
+def get_jwt_secret() -> str:
+    """
+    Gets the `JWT_SECRET` env variable. If not set, `JWT_SECRET_FILE` is
+    read and `JWT_SECRET` set from its content.
+
+    Raises:
+        `JWTSecretFileUndefined`: Raised if the `JWT_SECRET_FILE` env variable
+            is not set.
+        `JWTSecretUndefined`: Raised if the `JWT_SECRET` is not set and cannot
+            be read from `JWT_SECRET_FILE`
+
+    Returns:
+        `str`: jwt secret
+    """
+    try:
+        jwt_secret: str = config("JWT_SECRET")
+
+        return jwt_secret
+    except Exception:
+        try:
+            jwt_secret_file = config("JWT_SECRET_FILE")
+
+            if jwt_secret_file:
+                with open(jwt_secret_file, "r") as f:
+                    jwt_secret = f.read().strip()
+
+            if jwt_secret:
+                return jwt_secret
+            else:
+                raise JWTSecretFileUndefined
+        except JWTSecretFileUndefined:
+            raise JWTSecretUndefined
+
+
+JWT_SECRET: str = get_jwt_secret()
+JWT_ALGORITHM = config("JWT_ALGORITHM", default="HS256")
 
 
 def token_response(token: str):
