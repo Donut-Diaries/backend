@@ -1,8 +1,6 @@
-from fastapi import FastAPI
+from src.app import app
 
 from src.consumer.router import consumer_router
-
-app = FastAPI()
 
 
 @app.get("/")
