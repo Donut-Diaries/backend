@@ -78,14 +78,14 @@ class SupabaseJWTBearer(HTTPBearer):
 
     @app.get("/users/me")
     def read_current_user(
-        payload: Annotated[SupabaseJWTPayload, Depends(SupabaseJWTBearer)]
+        payload: Annotated[SupabaseJWTPayload, Depends(SupabaseJWTBearer())]
     ):
         return payload
     ```
     """
 
-    def __init__(self, auto_error: bool = True):
-        super(SupabaseJWTBearer, self).__init__(auto_error=auto_error)
+    def __init__(self):
+        super(SupabaseJWTBearer, self).__init__()
 
     async def __call__(self, request: Request) -> Optional[SupabaseJWTPayload]:
         credentials: HTTPAuthorizationCredentials = await super(
