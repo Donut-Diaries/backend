@@ -5,6 +5,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from src.config import CONFIG
 from src.consumer.models import Consumer, AnonymousConsumer, SignedConsumer
 
+from src.vendor.models import Vendor, Food
+
 
 def get_mongodb_uri():
     if CONFIG.MONGODB_URI:
@@ -29,7 +31,16 @@ def get_mongodb_uri():
 
 async def init_db(app: FastAPI):
     """Initialize database"""
-    app.db = AsyncIOMotorClient(get_mongodb_uri()).donut_diaries
+    app.db = AsyncIOMotorClient(
+        get_mongodb_uri(), uuidRepresentation="standard"
+    ).donut_diaries
     await init_beanie(
-        app.db, document_models=[Consumer, AnonymousConsumer, SignedConsumer]
+        app.db,
+        document_models=[
+            Consumer,
+            AnonymousConsumer,
+            SignedConsumer,
+            Vendor,
+            Food,
+        ],
     )
