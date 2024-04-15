@@ -167,6 +167,30 @@ async def get_food_by_id(food_id: str) -> Food | None:
     )
 
 
+async def get_food_by_name(food_name: str) -> Food | None:
+    """
+    Gets food from the database by the name.
+
+    Args:
+        food_name (str): The name of the food to get.
+
+    Raises:
+        HTTPException: If the food with given name is not found
+
+    Returns:
+        Food | None: The food from the database, else None.
+    """
+    food = await Food.find_one(Food.name == food_name)
+
+    if food:
+        return food
+
+    raise HTTPException(
+        status_code=404,
+        detail="The food `{}` not found.".format(food_name),
+    )
+
+
 async def food_linked_to_vendor(
     food: Food = Depends(get_food_by_id), vendor: Vendor = Depends(get_vendor)
 ) -> Food | None:
@@ -186,3 +210,25 @@ async def food_linked_to_vendor(
         return food
 
     raise HTTPException(status_code=400, detail="Invalid food")
+
+
+async def food_linked_to_vendor_name(
+    vendor: Vendor = Depends(get_vendor_by_name),
+    food: Food = Depends(get_food_by_name),
+) -> Food | None:
+    """
+    Validates that the current vendor is linked to the food.
+
+    Args:
+        food (Food): The food to check.
+        vendor (Vendor, optional): The signed vendor.
+            Defaults to Depends(get_vendor).
+
+    Returns:
+        Food | None: The food if the vendor is linked to the food, else None.
+    """
+
+    if str(food.id) in [food.to_dict()["id"] for food in vendor.menu]:
+        return food
+
+    raise HTTPException(status_code=404, detail="Invalid food")

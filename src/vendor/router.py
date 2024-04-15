@@ -7,6 +7,7 @@ from src.vendor.dependencies import (
     vendor_exists,
     parse_new_vendor_details,
     food_linked_to_vendor,
+    food_linked_to_vendor_name,
 )
 from src.vendor.models import (
     Vendor,
@@ -110,6 +111,29 @@ async def get_menu(menu=Depends(get_vendor_menu)) -> list[FoodOut]:
     """Gets the list of the foods that a vendor provides"""
 
     return menu
+
+
+@router.get(
+    "/{vendor_name}/menu/{food_name}",
+    status_code=status.HTTP_200_OK,
+    response_model=FoodOut,
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": HTTPError,
+            "description": "Vendor not found",
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "model": HTTPError,
+            "description": "Food not found",
+        },
+    },
+)
+async def get_food(
+    food: Food = Depends(food_linked_to_vendor_name),
+) -> FoodOut:
+    """Gets certain food from a given vendor"""
+
+    return food
 
 
 @router.post(
