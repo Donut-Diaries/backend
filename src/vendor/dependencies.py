@@ -75,7 +75,7 @@ async def parse_new_vendor_details(
     """
     Parses vendor details from the SupabaseJWTPayload and the VendorCreate
     form data into one object that can be used during vendor creation.
-    
+
     The `id`, `email` and `phone` from the `SupabaseJWTPayload` are used
     over those in the VendorCreate. If the email in SupabaseJWTPayload is not
     valid, then the one in VendorCreate is used.
@@ -101,3 +101,30 @@ async def parse_new_vendor_details(
         pass
 
     return vendor_create
+
+
+async def get_vendor_by_name(vendor_name: str) -> Vendor | None:
+    """
+    Gets the vendor from the database by their name.
+
+    Args:
+        vendor_name (str): Name of the vendor.
+
+    Raises:
+        HTTPException: If the vendor does not exist
+
+    Returns:
+        Vendor | None: The vendor if they are found else None.
+    """
+
+    vendor: Vendor = await Vendor.find_one(
+        Vendor.name == vendor_name, fetch_links=True
+    )
+
+    if not vendor:
+        raise HTTPException(
+            status_code=404,
+            detail="The vendor `{}` does not exist.".format(vendor_name),
+        )
+
+    return vendor

@@ -133,6 +133,18 @@ class FoodCreate(BaseModel):
     category: list[str] | None = None
 
 
+class FoodOut(BaseModel):
+    name: str
+    description: str | None = None
+    picture: list[str] | None = None
+    price: float
+    price: FoodPrice
+    available: bool
+    ttp: int
+    ingredients: list[str] | None = None
+    category: list[str] | None = None
+
+
 class Vendor(Document):
     """Vendor document model.
 
