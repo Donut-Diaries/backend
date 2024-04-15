@@ -133,6 +133,17 @@ class FoodCreate(BaseModel):
     category: list[str] | None = None
 
 
+class FoodUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    picture: list[str] | None = None
+    price: FoodPrice | None = None
+    available: bool | None = None
+    ttp: int | None = None
+    ingredients: list[str] | None = None
+    category: list[str] | None = None
+
+
 class FoodOut(BaseModel):
     name: str
     description: str | None = None

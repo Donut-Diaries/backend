@@ -5,9 +5,23 @@ from src.vendor.dependencies import (
     get_vendor_by_name,
     vendor_exists,
     parse_new_vendor_details,
+    food_linked_to_vendor,
 )
-from src.vendor.models import Vendor, VendorCreate, VendorOut, FoodOut
-from src.vendor.service import create_vendor
+from src.vendor.models import (
+    Vendor,
+    VendorCreate,
+    VendorOut,
+    Food,
+    FoodCreate,
+    FoodOut,
+    FoodUpdate,
+)
+from src.vendor.service import (
+    create_vendor,
+    insert_food,
+    update_food,
+    delete_food,
+)
 from src.vendor.schema import HTTPError
 
 
@@ -93,4 +107,90 @@ async def new_vendor(
 )
 async def menu(vendor: Vendor = Depends(get_vendor_by_name)) -> list[FoodOut]:
     """Gets the list of the foods that a vendor provides"""
+
     return vendor.menu
+
+
+@router.post(
+    "/menu",
+    status_code=status.HTTP_201_CREATED,
+    response_model=list[FoodOut],
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": HTTPError,
+            "description": "Vendor does not exists",
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "model": HTTPError,
+            "description": "Forbidden",
+        },
+    },
+)
+async def add_food_to_menu(
+    food_create: FoodCreate | list[FoodCreate],
+    vendor: Vendor = Depends(vendor_exists),
+) -> list[FoodOut]:
+    """Add food to the vendor's menu"""
+
+    new_food = await insert_food(food_create, vendor)
+
+    return new_food
+
+
+@router.patch(
+    "/menu",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=FoodOut,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": HTTPError,
+            "description": "Vendor does not exists",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "model": HTTPError,
+            "description": "Updating invalid food",
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "model": HTTPError,
+            "description": "Forbidden",
+        },
+    },
+)
+async def update_food_in_menu(
+    food_update: FoodUpdate,
+    old_food: Food = Depends(food_linked_to_vendor),
+) -> FoodOut:
+    """Update food in the vendor's menu"""
+
+    new_food = await update_food(food_update, old_food)
+
+    return new_food
+
+
+@router.delete(
+    "/menu",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": HTTPError,
+            "description": "Vendor does not exists",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "model": HTTPError,
+            "description": "Deleting invalid food",
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "model": HTTPError,
+            "description": "Forbidden",
+        },
+    },
+)
+async def delete_food_from_menu(
+    food: Food = Depends(food_linked_to_vendor),
+    vendor: Vendor = Depends(vendor_exists),
+):
+    """Delete food from the vendor's menu"""
+
+    await delete_food(food, vendor)
+
+    return {"detail": "OK"}
