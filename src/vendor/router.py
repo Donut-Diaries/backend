@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, status
 from src.auth.jwt_bearer import SupabaseJWTBearer
 from src.vendor.dependencies import (
     get_vendor_by_name,
+    get_vendor_menu,
     vendor_exists,
     parse_new_vendor_details,
     food_linked_to_vendor,
@@ -105,10 +106,10 @@ async def new_vendor(
         }
     },
 )
-async def menu(vendor: Vendor = Depends(get_vendor_by_name)) -> list[FoodOut]:
+async def get_menu(menu=Depends(get_vendor_menu)) -> list[FoodOut]:
     """Gets the list of the foods that a vendor provides"""
 
-    return vendor.menu
+    return menu
 
 
 @router.post(

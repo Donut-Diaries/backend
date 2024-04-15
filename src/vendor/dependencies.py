@@ -117,9 +117,7 @@ async def get_vendor_by_name(vendor_name: str) -> Vendor | None:
         Vendor | None: The vendor if they are found else None.
     """
 
-    vendor: Vendor = await Vendor.find_one(
-        Vendor.name == vendor_name, fetch_links=True
-    )
+    vendor: Vendor = await Vendor.find_one(Vendor.name == vendor_name)
 
     if not vendor:
         raise HTTPException(
@@ -128,6 +126,21 @@ async def get_vendor_by_name(vendor_name: str) -> Vendor | None:
         )
 
     return vendor
+
+
+async def get_vendor_menu(vendor: Vendor = Depends(get_vendor_by_name)):
+    """
+    Fetches all foods linked to a vendor in the menu
+
+    Args:
+        vendor (Vendor, optional): The vendor. Defaults to Depends(get_vendor_by_name).
+
+    Returns:
+        List[Link[Food]]: A list of the fetched foods
+    """
+    await vendor.fetch_all_links()
+
+    return vendor.menu
 
 
 async def get_food_by_id(food_id: str) -> Food | None:
