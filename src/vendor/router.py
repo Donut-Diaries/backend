@@ -19,6 +19,23 @@ router = APIRouter(
 
 
 @router.get(
+    "/{vendor_name}",
+    status_code=status.HTTP_200_OK,
+    response_model=VendorOut,
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": HTTPError,
+            "description": "Vendor not found",
+        }
+    },
+)
+async def get_vendor_with_name(
+    vendor: Vendor = Depends(get_vendor_by_name),
+) -> VendorOut:
+    return vendor
+
+
+@router.get(
     "/me",
     status_code=status.HTTP_200_OK,
     response_model=VendorOut,
@@ -33,7 +50,9 @@ router = APIRouter(
         },
     },
 )
-async def get_vendor(vendor: Vendor = Depends(vendor_exists)) -> VendorOut:
+async def get_current_signed_vendor(
+    vendor: Vendor = Depends(vendor_exists),
+) -> VendorOut:
     return vendor
 
 
@@ -66,7 +85,7 @@ async def new_vendor(
     status_code=status.HTTP_200_OK,
     response_model=list[FoodOut],
     responses={
-        status.HTTP_400_BAD_REQUEST: {
+        status.HTTP_404_NOT_FOUND: {
             "model": HTTPError,
             "description": "Vendor not found",
         }
