@@ -18,7 +18,7 @@ from src.vendor.models import (
 async def create_vendor(vendor_details: VendorCreate) -> Vendor | None:
     try:
 
-        vendor = Vendor(**vendor_details.model_dump())
+        vendor = Vendor(**vendor_details.model_dump(), orders=[])
         await vendor.insert(link_rule=WriteRules.WRITE)
 
         return vendor
