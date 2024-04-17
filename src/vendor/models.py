@@ -12,8 +12,6 @@ from typing_extensions import Annotated, Doc
 
 from beanie import Document, Indexed, Link
 
-from src.order.models import Order
-
 
 class STATUS(StrEnum):
     """Status of a vendor.
@@ -219,15 +217,6 @@ class Vendor(Document):
         ),
     ]
 
-    orders: Annotated[
-        list[Link[Order]],
-        Doc(
-            """
-            List of the orders the vendor has received
-            """
-        ),
-    ]
-
     @field_validator("name")
     def validate_name(cls, name: str):
         _name = name.strip()
@@ -299,4 +288,3 @@ class VendorOut(BaseModel):
     rating: float
     status: STATUS
     menu: list[Link[Food]]
-    orders: list[Link[Order]]

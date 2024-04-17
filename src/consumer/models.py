@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from beanie import Document, Indexed, UnionDoc, Link
+from beanie import Document, Indexed, UnionDoc
 from datetime import datetime
 from pydantic import EmailStr, Field, model_validator
 from typing import Annotated
 from uuid import UUID, uuid4
-
-from src.order.models import Order
 
 
 class Consumer(UnionDoc):
@@ -46,7 +44,6 @@ class SignedConsumer(ConsumerBase):
     disabled: bool
     created_at: datetime
     updated_at: datetime
-    orders: list[Link[Order]]
 
     def __repr__(self) -> str:
         return f"<Consumer {self.email}>"
@@ -117,7 +114,6 @@ class SignedConsumerOut(ConsumerBase):
     phone: str = ""
     is_anonymous: bool = False
     disabled: bool = False
-    orders: list[Link[Order]]
 
 
 class AnonymousConsumer(ConsumerBase):
@@ -132,7 +128,6 @@ class AnonymousConsumer(ConsumerBase):
     is_anonymous: bool
     disabled: bool
     created_at: datetime
-    orders: list[Link[Order]]
 
     class Settings:
         union_doc = Consumer
@@ -151,4 +146,3 @@ class AnonymousConsumerOut(ConsumerBase):
 
     is_anonymous: bool = True
     disabled: bool = False
-    orders: list[Link[Order]]

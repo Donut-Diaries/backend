@@ -7,8 +7,6 @@ from src.consumer.models import Consumer, AnonymousConsumer, SignedConsumer
 
 from src.vendor.models import Vendor, Food
 
-from src.order.models import Order
-
 
 def get_mongodb_uri():
     if CONFIG.MONGODB_URI:
@@ -44,6 +42,5 @@ async def init_db(app: FastAPI):
             SignedConsumer,
             Vendor,
             Food,
-            Order,
         ],
     )
