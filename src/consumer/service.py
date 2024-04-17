@@ -23,7 +23,7 @@ async def create_anonymous_consumer(
     """
     try:
         consumer: AnonymousConsumer = AnonymousConsumer(
-            **anonymous_consumer.model_dump()
+            **anonymous_consumer.model_dump(), orders=[]
         )
         await consumer.insert()
 
@@ -47,7 +47,7 @@ async def create_signed_consumer(
 
     try:
         consumer: SignedConsumer = SignedConsumer(
-            **signed_consumer.model_dump()
+            **signed_consumer.model_dump(), orders=[]
         )
         await consumer.insert()
 
