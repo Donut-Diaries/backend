@@ -11,7 +11,7 @@ from src.order.models import OrderCreate, FoodItem
 from src.order.schema import FoodPriceView, OrderVendorConsumer
 
 from src.consumer.models import Consumer
-from src.vendor.models import Vendor, Food
+from src.vendor.models import Vendor, Food, STATUS as vendor_status
 
 
 def consumer_id(
@@ -62,6 +62,7 @@ async def get_vendor_from_id(vendor_id: UUID) -> Vendor | None:
 
     Raises:
         HTTPException: If the vendor does not exist
+        HTTPException: If the vendor's status is closed.
 
     Returns:
         Vendor | None: The vendor if found, else None
@@ -70,6 +71,9 @@ async def get_vendor_from_id(vendor_id: UUID) -> Vendor | None:
 
     if not vendor:
         raise HTTPException(detail="vendor does not exist", status_code=400)
+    
+    if vendor.status == vendor_status.CLOSED:
+        raise HTTPException(status_code=400, detail="vendor is closed")
 
     return vendor
 
@@ -83,8 +87,14 @@ async def validate_foods(foodItems: list[FoodItem], vendor: Vendor) -> None:
         vendor (Vendor): The vendor to check from
 
     Raises:
+        HTTPException: If the foodItems list is empty.
         HTTPException: If a food is not found in the vendor's menu.
     """
+
+    if len(foodItems) == 0:
+        raise HTTPException(
+            status_code=400, detail="Order must have at least one food"
+        )
 
     vendor_food_ids = [food.to_dict()["id"] for food in vendor.menu]
     food_ids = [food.food_id for food in foodItems]
