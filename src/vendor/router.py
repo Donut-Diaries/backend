@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 
 from src.auth.jwt_bearer import SupabaseJWTBearer
 from src.vendor.dependencies import (
@@ -17,14 +17,16 @@ from src.vendor.models import (
     FoodCreate,
     FoodOut,
     FoodUpdate,
+    STATUS,
 )
 from src.vendor.service import (
     create_vendor,
+    update_vendor_status,
     insert_food,
     update_food,
     delete_food,
 )
-from src.vendor.schema import HTTPError
+from src.vendor.schema import HTTPError, StatusUpdateOut
 
 
 router = APIRouter(
@@ -94,6 +96,30 @@ async def new_vendor(
     vendor = await create_vendor(vendor_details=vendor_details)
 
     return vendor
+
+
+@router.patch(
+    "/change-status",
+    status_code=status.HTTP_200_OK,
+    response_model=StatusUpdateOut | HTTPError,
+    responses={
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": HTTPError,
+            "description": "Unable to update status",
+        },
+    },
+)
+async def change_status(
+    new_status: STATUS, vendor: Vendor = Depends(vendor_exists)
+) -> StatusUpdateOut | HTTPError:
+    """Switch vendor status from open to closed or vice versa"""
+
+    i = await update_vendor_status(new_status=new_status, vendor=vendor)
+
+    if i == 0:
+        return {"detail": "status updated", "status": vendor.status}
+    else:
+        raise HTTPException(status_code=500, detail="Unable to update status")
 
 
 @router.get(

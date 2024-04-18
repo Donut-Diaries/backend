@@ -12,6 +12,7 @@ from src.vendor.models import (
     FoodCreate,
     Food,
     FoodUpdate,
+    STATUS as vendor_status,
 )
 
 
@@ -28,6 +29,30 @@ async def create_vendor(vendor_details: VendorCreate) -> Vendor | None:
         print(e.errors()[0])
     except PydanticSerializationError as e:
         print(e)
+
+
+async def update_vendor_status(
+    new_status: vendor_status, vendor: Vendor
+) -> int:
+    """
+    Updates a vendor's status.
+
+    Args:
+        new_status (STATUS): The new status of the vendor.
+        vendor (Vendor): The vendor to update.
+
+    Returns:
+        int: 0 if the update is successful, else 1.
+    """
+
+    try:
+        if vendor.status != new_status:
+            vendor.status = new_status
+            await vendor.save()
+    except Exception:
+        return 1
+
+    return 0
 
 
 async def insert_food(
