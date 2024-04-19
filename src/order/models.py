@@ -1,9 +1,11 @@
 from enum import StrEnum
-from uuid import UUID, uuid4
+from uuid import UUID
 from typing_extensions import Annotated, Doc
 
 from beanie import Document
 from pydantic import BaseModel, Field, field_validator
+
+from .utils import id_from_datetime
 
 import math
 
@@ -45,13 +47,16 @@ class Order(Document):
     """Model representing an order."""
 
     id: Annotated[
-        UUID,
+        str,
         Doc(
             """
-            Id of the order. Defaults to a random uuid4.
+            Id of the order. Defaults to the current timestamp down to
+            micro seconds.
+            
+            eg: 20240419000056631770
             """
         ),
-    ] = Field(default_factory=uuid4)
+    ] = Field(default_factory=id_from_datetime)
     vendor_id: Annotated[
         UUID,
         Doc(
@@ -116,7 +121,7 @@ class OrderCreate(BaseModel):
 class OrderOut(BaseModel):
     """Order output view"""
 
-    id: UUID
+    id: str
     vendor_id: UUID
     consumer_id: UUID
     foods: list[FoodItem]
