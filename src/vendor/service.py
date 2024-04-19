@@ -15,11 +15,15 @@ from src.vendor.models import (
     STATUS as vendor_status,
 )
 
+from src.queue import Queue
+
 
 async def create_vendor(vendor_details: VendorCreate) -> Vendor | None:
     try:
 
-        vendor = Vendor(**vendor_details.model_dump(), orders=[])
+        queue = Queue(name=vendor_details.name, orders=[], current_order=None)
+
+        vendor = Vendor(**vendor_details.model_dump(), orders=[], queue=queue)
         await vendor.insert(link_rule=WriteRules.WRITE)
 
         return vendor

@@ -14,6 +14,8 @@ from beanie import Document, Indexed, Link
 
 from src.order.models import Order
 
+from src.queue import Queue
+
 
 class STATUS(StrEnum):
     """Status of a vendor.
@@ -227,6 +229,15 @@ class Vendor(Document):
             """
         ),
     ]
+    queue: Annotated[
+        Link[Queue],
+        Doc(
+            """
+            Queue for maintaining unprocessed orders and
+            serving them to the vendor in the right order
+            """
+        ),
+    ]
 
     @field_validator("name")
     def validate_name(cls, name: str):
@@ -300,3 +311,4 @@ class VendorOut(BaseModel):
     status: STATUS
     menu: list[Link[Food]]
     orders: list[Link[Order]]
+    queue: Link[Queue]

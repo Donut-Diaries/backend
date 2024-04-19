@@ -9,6 +9,8 @@ from src.vendor.models import Vendor, Food
 
 from src.order.models import Order
 
+from src.queue import Queue
+
 
 def get_mongodb_uri():
     if CONFIG.MONGODB_URI:
@@ -45,5 +47,6 @@ async def init_db(app: FastAPI):
             Vendor,
             Food,
             Order,
+            Queue,
         ],
     )
