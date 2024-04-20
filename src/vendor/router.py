@@ -1,4 +1,10 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    status,
+    HTTPException,
+)
+
 
 from src.auth.jwt_bearer import SupabaseJWTBearer
 from src.vendor.dependencies import (
@@ -25,8 +31,11 @@ from src.vendor.service import (
     insert_food,
     update_food,
     delete_food,
+    get_next_order_from_queue,
 )
 from src.vendor.schema import HTTPError, StatusUpdateOut
+
+from src.order.models import OrderOut
 
 
 router = APIRouter(
@@ -245,3 +254,54 @@ async def delete_food_from_menu(
     await delete_food(food, vendor)
 
     return {"detail": "OK"}
+
+
+@router.get(
+    "/orders/all",
+    status_code=status.HTTP_200_OK,
+    response_model=list[OrderOut],
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": HTTPError,
+            "description": "Vendor does not exists",
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "model": HTTPError,
+            "description": "Forbidden",
+        },
+    },
+)
+async def get_all_orders(
+    vendor: Vendor = Depends(vendor_exists),
+) -> list[OrderOut]:
+    """Gets a list of all the orders a vendor has.
+
+    Waiting, processing and completed orders are returned.
+    """
+
+    await vendor.fetch_link("orders")
+
+    return vendor.orders
+
+
+@router.get(
+    "/orders/next",
+    status_code=status.HTTP_200_OK,
+    response_model=OrderOut,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": HTTPError,
+            "description": "Vendor does not exists",
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "model": HTTPError,
+            "description": "Forbidden",
+        },
+    },
+)
+async def get_next_order(vendor: Vendor = Depends(vendor_exists)) -> OrderOut:
+    """Gets the next order from the vendor's queue"""
+
+    next_order = await get_next_order_from_queue(vendor=vendor)
+
+    return next_order

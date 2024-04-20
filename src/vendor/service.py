@@ -4,7 +4,12 @@ from pydantic_core._pydantic_core import (
 )
 from pymongo.errors import DuplicateKeyError
 
+
 from beanie import WriteRules
+
+from src.app import app
+from src.queue import Queue
+from src.websocket_manager import ConnectionManager
 
 from src.vendor.models import (
     Vendor,
@@ -15,7 +20,9 @@ from src.vendor.models import (
     STATUS as vendor_status,
 )
 
-from src.queue import Queue
+from src.order.models import Order
+
+websocket_manager: ConnectionManager = app.websocket_manager
 
 
 async def create_vendor(vendor_details: VendorCreate) -> Vendor | None:
@@ -125,3 +132,25 @@ async def delete_food(food: Food, vendor: Vendor) -> None:
             break
 
     await food.delete()
+
+
+async def get_next_order_from_queue(vendor: Vendor) -> Order:
+    """
+    Gets the next order that the vendor is supposed to process
+    from the queue.
+
+    Args:
+        vendor (Vendor): The vendor to get their next order.
+
+    Returns:
+        Order: The next order to process.
+    """
+    # Fetch queue from link
+    await vendor.fetch_link("queue")
+
+    queue: Queue = vendor.queue
+
+    # Get order from queue
+    next_order = await queue.dequeue()
+
+    return next_order
