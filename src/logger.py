@@ -5,6 +5,7 @@ import os
 import uvicorn.logging
 
 DEBUG = os.getenv("DEBUG")
+DEVELOPMENT = os.getenv("DEVELOPMENT")
 
 # get logger
 logger = logging.getLogger()
@@ -21,17 +22,22 @@ file_formatter = logging.Formatter(
 # create handler
 stream_handler = logging.StreamHandler(sys.stdout)
 
-if DEBUG:
-    file_handler = logging.FileHandler("app-debug.log")
-else:
-    file_handler = logging.FileHandler("app.log")
-
-# set formatters
 stream_handler.setFormatter(stdout_formatter)
-file_handler.setFormatter(file_formatter)
 
-# add handlers to logger
-logger.handlers = [stream_handler, file_handler]
+# Add file_handler in dev
+if DEVELOPMENT:
+    if DEBUG:
+        file_handler = logging.FileHandler("app-debug.log")
+    else:
+        file_handler = logging.FileHandler("app.log")
+        
+    file_handler.setFormatter(file_formatter)
+    
+    logger.handlers = [stream_handler, file_handler]
+
+else:
+    logger.handlers = [stream_handler]
+
 
 # set log level
 if DEBUG:
