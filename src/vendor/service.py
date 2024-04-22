@@ -7,9 +7,7 @@ from pymongo.errors import DuplicateKeyError
 
 from beanie import WriteRules
 
-from src.app import app
 from src.queue import Queue
-from src.websocket_manager import ConnectionManager
 
 from src.vendor.models import (
     Vendor,
@@ -21,8 +19,6 @@ from src.vendor.models import (
 )
 
 from src.order.models import Order
-
-websocket_manager: ConnectionManager = app.websocket_manager
 
 
 async def create_vendor(vendor_details: VendorCreate) -> Vendor | None:
