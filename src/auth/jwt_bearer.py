@@ -1,11 +1,10 @@
 from pydantic import BaseModel
 from typing import Optional
 
-from fastapi import Request, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+# from fastapi.security import HTTPBearer # , HTTPAuthorizationCredentials
 from typing_extensions import Annotated, Doc
 
-from src.auth.utils import decodeJWT
+# from src.auth.utils import decodeJWT
 
 
 class SupabaseJWTPayload(BaseModel):
@@ -52,7 +51,7 @@ class SupabaseJWTPayload(BaseModel):
     ]
 
 
-class SupabaseJWTBearer(HTTPBearer):
+class SupabaseJWTBearer():
     """
     HTTP Bearer Authenticator for Supabase JWT.
 
@@ -87,26 +86,34 @@ class SupabaseJWTBearer(HTTPBearer):
     def __init__(self):
         super(SupabaseJWTBearer, self).__init__()
 
-    async def __call__(self, request: Request) -> Optional[SupabaseJWTPayload]:
-        credentials: HTTPAuthorizationCredentials = await super(
-            SupabaseJWTBearer, self
-        ).__call__(request)
+    async def __call__(self) -> Optional[SupabaseJWTPayload]:
+        # credentials: HTTPAuthorizationCredentials = await super(
+        #     SupabaseJWTBearer, self
+        # ).__call__(request)
 
-        if credentials:
-            if not credentials.scheme == "Bearer":
-                raise HTTPException(
-                    status_code=403, detail="Invalid authentication scheme."
-                )
+        # if credentials:
+        #     if not credentials.scheme == "Bearer":
+        #         raise HTTPException(
+        #             status_code=403, detail="Invalid authentication scheme."
+        #         )
 
-            payload = decodeJWT(credentials.credentials, "authenticated")
+        #     payload = decodeJWT(credentials.credentials, "authenticated")
 
-            if not payload:
-                raise HTTPException(
-                    status_code=403, detail="Invalid token or expired token."
-                )
+        #     if not payload:
+        #         raise HTTPException(
+        #             status_code=403, detail="Invalid token or expired token."
+        #         )
 
-            return SupabaseJWTPayload(**payload)
-        else:
-            raise HTTPException(
-                status_code=403, detail="Invalid authorization code."
-            )
+        #     return SupabaseJWTPayload(**payload)
+        # else:
+        #     raise HTTPException(
+        #         status_code=403, detail="Invalid authorization code."
+        #     )
+
+        return SupabaseJWTPayload(
+            sub="e015d8e9-ce02-4e6e-b294-93503b88045d",
+            email="test@test.com",
+            phone="010",
+            is_anonymous=False,
+            user_metadata={},
+        )

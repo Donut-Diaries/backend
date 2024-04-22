@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, WebSocketException, status
 
 from src.auth.jwt_bearer import SupabaseJWTBearer, SupabaseJWTPayload
 from src.vendor.models import Vendor, VendorCreate, Food
@@ -123,6 +123,32 @@ async def get_vendor_by_name(vendor_name: str) -> Vendor | None:
         raise HTTPException(
             status_code=404,
             detail="The vendor `{}` does not exist.".format(vendor_name),
+        )
+
+    return vendor
+
+
+async def get_vendor_by_name_ws(vendor_name: str) -> Vendor | None:
+    """
+    Gets the vendor from the database by their name.
+    Used in websocket endpoints.
+
+    Args:
+        vendor_name (str): Name of the vendor.
+
+    Raises:
+        WebsocketException: If the vendor does not exist
+
+    Returns:
+        Vendor | None: The vendor if they are found else None.
+    """
+
+    vendor: Vendor = await Vendor.find_one(Vendor.name == vendor_name)
+
+    if not vendor:
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="The vendor `{}` does not exist.".format(vendor_name),
         )
 
     return vendor
