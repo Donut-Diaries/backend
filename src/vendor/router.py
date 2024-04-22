@@ -3,12 +3,17 @@ from fastapi import (
     Depends,
     status,
     HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
 )
+from websockets.exceptions import ConnectionClosedError
 
+from src.websocket_manager import WebsocketManager
 
 from src.auth.jwt_bearer import SupabaseJWTBearer
 from src.vendor.dependencies import (
     get_vendor_by_name,
+    get_vendor_by_name_ws,
     get_vendor_menu,
     vendor_exists,
     parse_new_vendor_details,
@@ -287,7 +292,7 @@ async def get_all_orders(
 @router.get(
     "/orders/next",
     status_code=status.HTTP_200_OK,
-    response_model=OrderOut,
+    response_model=OrderOut | None,
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "model": HTTPError,
@@ -299,9 +304,37 @@ async def get_all_orders(
         },
     },
 )
-async def get_next_order(vendor: Vendor = Depends(vendor_exists)) -> OrderOut:
+async def get_next_order(
+    vendor: Vendor = Depends(vendor_exists),
+) -> OrderOut | None:
     """Gets the next order from the vendor's queue"""
 
     next_order = await get_next_order_from_queue(vendor=vendor)
 
     return next_order
+
+
+@router.websocket("/{vendor_name}/ws/order-count")
+async def current_orders(
+    websocket: WebSocket,
+    vendor: Vendor = Depends(get_vendor_by_name_ws),
+):
+    """Gets number of orders that a vendor currently has waiting"""
+
+    name = vendor.name
+
+    websocket_manager = WebsocketManager()
+
+    await websocket_manager.connect(name, websocket)
+
+    try:
+        while True:
+            await websocket.receive_text()
+
+    except WebSocketDisconnect as e:
+        if not (e.code == status.WS_1010_MANDATORY_EXT):
+            # If the disconnect was not raised by the websocket_manager
+            websocket_manager.remove_connection(name)
+
+    except ConnectionClosedError:
+        websocket_manager.remove_connection(name)
