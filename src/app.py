@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
     await QueueChangeStream.close()
 
     # Close all open websockets
-    await WebsocketManager.shutdown(__name__)
+    await WebsocketManager.shutdown()
 
 
 app = FastAPI(

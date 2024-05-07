@@ -1,12 +1,23 @@
 from __future__ import annotations
 
+import inspect
 from typing import Any
+
+from fastapi import WebSocket, status
+from fastapi.websockets import WebSocketState
 from typing_extensions import Annotated, Doc
 
-from fastapi import status, WebSocket
-from fastapi.websockets import WebSocketState
-
 from src.logger import logger
+
+
+class ModuleNameNotFoundError(Exception):
+    """
+    Exception raised if the module_name cannot be determined from the stack.
+    """
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+        self.message = "module_name could not be determined from the stack"
 
 
 class WebsocketManager:
@@ -24,9 +35,20 @@ class WebsocketManager:
     ] = None
 
     @classmethod
-    async def shutdown(cls, name: str):
+    async def shutdown(cls, module_name: str | None = None):
+        """Closes and disconnects all active connections.
+
+        If `module_name` is None, it is inferred from the module calling
+        this method. That means that this method will only work if called
+        from the module where the WebsocketManager was instantiated or if
+        the `module_name` is provided while calling from a different file.
+
+        Args:
+            module_name (str | None, optional): Name of the module where the
+                WebsocketManager was instantiated. Defaults to None.
+        """
         if cls._instance:
-            await cls._instance.shutdown(name)
+            await cls._instance.shutdown(module_name)
 
     class __WebsocketManager:
 
@@ -40,10 +62,10 @@ class WebsocketManager:
                     """
                     Name of the module where the WebsocketManager was
                     instantiated.
-                    
+
                     This helps in making critical functions like `shutdown`
                     are called only in one module.
-                    
+
                     * The functions can still be called if someone explicitly
                     * knows the module where WebsocketManager was instantiated.
                     """
@@ -162,22 +184,37 @@ class WebsocketManager:
                 ):
                     self.remove_connection(name)
 
-        async def shutdown(self, module_name: str):
+        async def shutdown(self, module_name: str | None = None):
             """
             Closes and disconnects all active connections.
 
+            If `module_name` is None, it is inferred from the module calling
+            this method. That means that this method will only work if called
+            from the module where the WebsocketManager was instantiated or if
+            the `module_name` is provided while calling from a different file.
+
             Args:
-                module_name (str): name of the module where the WebsocketManager
-                    was initialized.
+                module_name (str | None): name of the module where the WebsocketManager
+                    was initialized. Defaults to None.
 
             Raises:
-                ValueError: If the module_name is not given or is not of type str
+                TypeError: If the module_name is given and is not of type str
+                ModuleNameNotFoundError: If the module_name is None and cannot be
+                    gotten from the stack
             """
 
-            if not module_name or not isinstance(module_name, str):
-                raise ValueError(
-                    "module_name must be provided and should be of type str"
+            if module_name and not isinstance(module_name, str):
+                raise TypeError("module_name must be of type str or None")
+
+            if not module_name:
+                # Get module name from stack
+                module_name = self.__get_calling_module_name()
+
+            if not module_name:
+                logger.warn(
+                    "Cannot shutdown WebsocketManager. module_name could not be found."
                 )
+                raise ModuleNameNotFoundError
 
             if module_name == self.__module_name:
                 logger.info(
@@ -195,7 +232,40 @@ class WebsocketManager:
                     "Cannot shutdown WebsocketManager. Shutdown from the module where it was created"
                 )
 
-    def __new__(cls, module_name: str | None = None) -> __WebsocketManager:
+        def __get_calling_module_name(self) -> str | None:
+            """
+            Gets the name of the module where a method was called from
+            by checking the stack.
+            """
+
+            def _module_name(obj: object) -> str | None:
+                if module := inspect.getmodule(obj):
+                    return module.__name__
+
+            module_name: str | None = None
+            index = 1
+
+            frm = inspect.stack()[index]
+            module_name = _module_name(frm[0])
+
+            if module_name:
+                # Loop over all stack records from this module.
+                while module_name == __name__:
+                    index += 1
+                    try:
+                        frm = inspect.stack()[index]
+                        module_name = _module_name(frm[0])
+                    except IndexError:
+                        # Original call was from this module
+                        break
+
+            logger.debug("{} calling WebsocketManager".format(module_name))
+
+            return module_name
+
+    def __new__(
+        cls, module_name: str | None = None
+    ) -> __WebsocketManager | None:
         """
         Creates a new instance of __WebsocketManager.
 
@@ -204,7 +274,7 @@ class WebsocketManager:
                 the manager is instantiated. Defaults to None.
 
         Raises:
-            ValueError: If module_name is not a string in first call.
+            TypeError: If module_name is not a string in first call.
 
         Returns:
             __WebsocketManager: An instance of __WebsocketManager
@@ -215,7 +285,7 @@ class WebsocketManager:
         elif not cls._instance and (
             not module_name or not isinstance(module_name, str)
         ):
-            raise ValueError(
+            raise TypeError(
                 "module_name must be provided in first call and be of type str"
             )
 
