@@ -23,6 +23,26 @@ class ModuleNameNotFoundError(Exception):
 class WebsocketManager:
     """
     A singleton class for managing websocket connections in the application.
+
+    ## Example
+
+        ```python
+        from src.websocket_manager import WebsocketManager
+
+
+        # Explicitly providing the module name by passing __name__
+
+        manager = WebsocketManager(__name__) # Instantiation
+        manager.shutdown(__name__)  # Will only work if __name__ is same as
+                                    # the one used in instantiation.
+
+
+        # Not providing __name__ and letting the class get it from stack
+
+        manager = WebsocketManager() # module name is gotten from stack
+        manager.shutdown() # Also gotten from stack. Will only work if the
+                           # inferred module name is same as from instantiation
+        ```
     """
 
     _instance: Annotated[
@@ -232,7 +252,8 @@ class WebsocketManager:
                     "Cannot shutdown WebsocketManager. Shutdown from the module where it was created"
                 )
 
-        def __get_calling_module_name(self) -> str | None:
+        @staticmethod
+        def __get_calling_module_name() -> str | None:
             """
             Gets the name of the module where a method was called from
             by checking the stack.
@@ -271,22 +292,50 @@ class WebsocketManager:
 
         Args:
             module_name (str | None, optional): The name of the module where
-                the manager is instantiated. Defaults to None.
+                the manager is instantiated. Defaults to None. If it is `None`,
+                it is inferred from the stack by getting the module calling the
+                class.
 
         Raises:
-            TypeError: If module_name is not a string in first call.
+            TypeError: If module_name is provided and is not a string.
 
         Returns:
             __WebsocketManager: An instance of __WebsocketManager
+
+
+        ## Example
+
+        ```python
+        from src.websocket_manager import WebsocketManager
+
+
+        # Explicitly providing the module name by passing __name__
+
+        manager = WebsocketManager(__name__)    # Instantiation
+        manager.shutdown(__name__)  # Will only work if __name__ is same as the one used in instantiation.
+
+
+        # Not providing __name__ and letting the class get it from stack
+
+        manager = WebsocketManager() # module name is gotten from stack
+        manager.shutdown() # Also gotten from stack. Will only work if the
+                           # inferred module name is same as from instantiation
+        ```
         """
+
         if not cls._instance and isinstance(module_name, str):
             cls._instance = cls.__WebsocketManager(module_name=module_name)
 
+        elif not cls._instance and not module_name:
+            # Use module name from the stack
+            module_name = cls.__WebsocketManager.__get_calling_module_name()
+            cls._instance = cls.__WebsocketManager(module_name=module_name)
+
         elif not cls._instance and (
-            not module_name or not isinstance(module_name, str)
+            module_name and not isinstance(module_name, str)
         ):
             raise TypeError(
-                "module_name must be provided in first call and be of type str"
+                "module_name must be provided be of type str or None"
             )
 
         return cls._instance
