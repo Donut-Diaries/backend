@@ -42,6 +42,8 @@ async def lifespan(app: FastAPI):
     # Close all open websockets
     await WebsocketManager.shutdown()
 
+    # Close the database connection
+    app.client.close()
 
 app = FastAPI(
     title="Donut-Diaries API",
