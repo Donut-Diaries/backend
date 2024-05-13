@@ -9,6 +9,6 @@ async def root():
     return "donut-diaries-api"
 
 
-app.include_router(consumer_router)
-app.include_router(vendor_router)
-app.include_router(order_router)
+app.include_router(consumer_router, prefix="/api")
+app.include_router(vendor_router, prefix="/api")
+app.include_router(order_router, prefix="/api")
