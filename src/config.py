@@ -4,6 +4,8 @@ from urllib.parse import quote_plus
 
 
 class Config(BaseModel):
+    ENVIRONMENT: str = config("ENVIRONMENT", "production")
+    
     # MongoDB settings
     MONGODB_URI: str = config("MONGODB_URI", "")
     MONGODB_USER: str = quote_plus(config("MONGODB_USER", ""))
