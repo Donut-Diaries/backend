@@ -56,7 +56,7 @@ def me(
     dependencies=[Depends(consumer_not_exists)],
     status_code=status.HTTP_201_CREATED,
     response_model=AnonymousConsumerOut,
-    response_model_exclude="_id",
+    # response_model_exclude="_id",
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "model": HTTPError,
@@ -87,7 +87,7 @@ async def create_anonymous_customer(
     dependencies=[Depends(consumer_not_exists)],
     status_code=status.HTTP_201_CREATED,
     response_model=SignedConsumerOut,
-    response_model_exclude="_id",
+    # response_model_exclude="_id",
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "model": HTTPError,
