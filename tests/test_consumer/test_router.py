@@ -8,7 +8,7 @@ from src.consumer.models import AnonymousConsumer, SignedConsumer
 @pytest.mark.asyncio
 async def test_get_consumer_not_authenticated(client):
 
-    response = await client.get("/consumer/me")
+    response = await client.get("/api/consumer/me")
 
     assert response is not None
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -29,7 +29,7 @@ async def test_get_anonymous_consumer(
         }
     ).insert()
 
-    response = await client_anon_consumer.get("/consumer/me")
+    response = await client_anon_consumer.get("/api/consumer/me")
 
     assert response is not None
     assert response.status_code == status.HTTP_200_OK
@@ -42,7 +42,7 @@ async def test_create_anonymous_consumer(
     anonymous_consumer_out,
 ):
 
-    response = await client_anon_consumer.post("/consumer/create/anonymous")
+    response = await client_anon_consumer.post("/api/consumer/create/anonymous")
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == anonymous_consumer_out
@@ -54,13 +54,13 @@ async def test_duplicate_anonymous_consumer(
     anonymous_consumer_out,
 ):
 
-    response = await client_anon_consumer.post("/consumer/create/anonymous")
+    response = await client_anon_consumer.post("/api/consumer/create/anonymous")
 
     assert response is not None
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == anonymous_consumer_out
 
-    response1 = await client_anon_consumer.post("/consumer/create/anonymous")
+    response1 = await client_anon_consumer.post("/api/consumer/create/anonymous")
 
     assert response1 is not None
     assert response1.status_code == status.HTTP_400_BAD_REQUEST
@@ -82,7 +82,7 @@ async def test_get_signed_consumer(
         }
     ).insert()
 
-    response = await client_signed_consumer.get("/consumer/me")
+    response = await client_signed_consumer.get("/api/consumer/me")
 
     assert response is not None
     assert response.status_code == status.HTTP_200_OK
@@ -94,7 +94,7 @@ async def test_create_signed_consumer(
     client_signed_consumer,
     signed_consumer_created_out,
 ):
-    response = await client_signed_consumer.post("/consumer/create/signed")
+    response = await client_signed_consumer.post("/api/consumer/create/signed")
 
     assert response is not None
     assert response.status_code == status.HTTP_201_CREATED
@@ -106,13 +106,13 @@ async def test_duplicate_signed_consumer(
     client_signed_consumer,
     signed_consumer_created_out,
 ):
-    response = await client_signed_consumer.post("/consumer/create/signed")
+    response = await client_signed_consumer.post("/api/consumer/create/signed")
 
     assert response is not None
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == signed_consumer_created_out
 
-    response1 = await client_signed_consumer.post("/consumer/create/signed")
+    response1 = await client_signed_consumer.post("/api/consumer/create/signed")
 
     assert response1 is not None
     assert response1.status_code == status.HTTP_400_BAD_REQUEST
