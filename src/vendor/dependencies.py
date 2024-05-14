@@ -218,7 +218,7 @@ async def get_food_by_name(food_name: str) -> Food | None:
 
 
 async def food_linked_to_vendor(
-    food: Food = Depends(get_food_by_id), vendor: Vendor = Depends(get_vendor)
+    vendor: Vendor = Depends(get_vendor), food: Food = Depends(get_food_by_id)
 ) -> Food | None:
     """
     Validates that the current vendor is linked to the food.
