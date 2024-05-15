@@ -3,9 +3,12 @@ from typing import Any, Dict
 
 import jwt
 from decouple import config
+from dotenv import load_dotenv
 
 from src.auth.exceptions import JWTSecretUndefined, JWTSecretFileUndefined
 
+# Load the .env
+load_dotenv()
 
 def get_jwt_secret() -> str:
     """
