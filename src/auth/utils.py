@@ -2,13 +2,10 @@ import time
 from typing import Any, Dict
 
 import jwt
-from decouple import config
-from dotenv import load_dotenv
 
-from src.auth.exceptions import JWTSecretUndefined, JWTSecretFileUndefined
+from src.config import CONFIG
+from src.auth.exceptions import JWTSecretUndefined, JWTSecretFileNotFound
 
-# Load the .env
-load_dotenv()
 
 def get_jwt_secret() -> str:
     """
@@ -16,36 +13,33 @@ def get_jwt_secret() -> str:
     read and `JWT_SECRET` set from its content.
 
     Raises:
-        `JWTSecretFileUndefined`: Raised if the `JWT_SECRET_FILE` env variable
-            is not set.
         `JWTSecretUndefined`: Raised if the `JWT_SECRET` is not set and cannot
             be read from `JWT_SECRET_FILE`
+        `JWTSecretFileNotFound`: If the given `JWT_SECRET_FILE` is not found.
 
     Returns:
         `str`: jwt secret
     """
-    try:
-        jwt_secret: str = config("JWT_SECRET")
 
-        return jwt_secret
-    except Exception:
+    if CONFIG.JWT_SECRET:
+        return CONFIG.JWT_SECRET
+
+    elif CONFIG.JWT_SECRET_FILE:
         try:
-            jwt_secret_file = config("JWT_SECRET_FILE")
-
-            if jwt_secret_file:
-                with open(jwt_secret_file, "r") as f:
-                    jwt_secret = f.read().strip()
+            with open(CONFIG.JWT_SECRET_FILE, "r") as f:
+                jwt_secret = f.read().strip()
 
             if jwt_secret:
                 return jwt_secret
-            else:
-                raise JWTSecretFileUndefined
-        except JWTSecretFileUndefined:
-            raise JWTSecretUndefined
+
+        except FileNotFoundError:
+            raise JWTSecretFileNotFound(CONFIG.JWT_SECRET_FILE)
+
+    raise JWTSecretUndefined
 
 
 JWT_SECRET: str = get_jwt_secret()
-JWT_ALGORITHM = config("JWT_ALGORITHM", default="HS256")
+JWT_ALGORITHM = CONFIG.JWT_ALGORITHM
 
 
 def token_response(token: str):
