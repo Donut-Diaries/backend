@@ -28,9 +28,12 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+          # Install dev dependencies
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
       - name: Unit Testing with pytest
         env:
           # add environment variables for tests
-          ENVIRONMENT: 'test'
+          ENVIRONMENT: "test"
         run: |
           python -m pytest
