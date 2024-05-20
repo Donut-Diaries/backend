@@ -35,5 +35,6 @@ jobs:
         env:
           # add environment variables for tests
           ENVIRONMENT: "test"
+          JWT_SECRET: 'Secret'
         run: |
           python -m pytest
